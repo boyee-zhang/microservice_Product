@@ -1,14 +1,16 @@
 package com.product.ProductService.service;
+import com.product.ProductService.DTO.ProductRequestDTO;
+import com.product.ProductService.DTO.ProductResponseDTO;
 import com.product.ProductService.model.Product;
 import java.util.*;
 public interface ProductService {
-    Product createProduct(Product product);
+    ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO);
 
-    Product getProductById(UUID id);
+    ProductResponseDTO getProductById(UUID id);
 
-    List<Product> getProductsByName(String name);
+    List<ProductResponseDTO> getProductsByName(String name);
 
     void deleteProductById(UUID id);
 
-    Product updateProductById(Product product);
+    ProductResponseDTO updateProductById(ProductRequestDTO productRequestDTO);
 }

@@ -1,6 +1,9 @@
 package com.product.ProductService.controller;
 
 import java.util.*;
+
+import com.product.ProductService.DTO.ProductRequestDTO;
+import com.product.ProductService.DTO.ProductResponseDTO;
 import com.product.ProductService.model.Product;
 import com.product.ProductService.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,34 +23,31 @@ public class ProductController {
     }
 
     @PostMapping("/add")
-    public ResponseEntity<Product> createProduct(@RequestBody Product product)
-    {
-        Product savedProduct = productService.createProduct(product);
+    public ResponseEntity<ProductResponseDTO> createProduct(@RequestBody ProductRequestDTO productRequestDTO) {
+        ProductResponseDTO savedProduct = productService.createProduct(productRequestDTO);
         return new ResponseEntity<>(savedProduct, HttpStatus.CREATED);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> getProductById(@PathVariable UUID id)
-    {
-        Product product = productService.getProductById(id);
-        return new ResponseEntity<>(product, HttpStatus.FOUND);
+    public ResponseEntity<ProductResponseDTO> getProductById(@PathVariable UUID id) {
+        ProductResponseDTO product = productService.getProductById(id);
+        return new ResponseEntity<>(product, HttpStatus.OK);
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<Product>> getProductByName(@RequestParam String name)
-    {
-        List<Product> products = new ArrayList<>();
-        products = productService.getProductsByName(name);
+    public ResponseEntity<List<ProductResponseDTO>> getProductByName(@RequestParam String name) {
+        List<ProductResponseDTO> products = productService.getProductsByName(name);
         return ResponseEntity.ok(products);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Product> updateProduct(@PathVariable UUID id, @RequestBody Product product) {
-        if (!id.equals(product.getId())) {
+    public ResponseEntity<ProductResponseDTO> updateProduct(@PathVariable UUID id,
+                                                            @RequestBody ProductRequestDTO productRequestDTO) {
+        if (!id.equals(productRequestDTO.getId())) {
             return ResponseEntity.badRequest().build();
         }
 
-        Product updatedProduct = productService.updateProductById(product);
+        ProductResponseDTO updatedProduct = productService.updateProductById(productRequestDTO);
         return ResponseEntity.ok(updatedProduct);
     }
 

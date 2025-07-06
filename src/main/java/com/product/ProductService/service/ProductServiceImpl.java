@@ -1,4 +1,7 @@
 package com.product.ProductService.service;
+import com.product.ProductService.DTO.ProductRequestDTO;
+import com.product.ProductService.DTO.ProductResponseDTO;
+import com.product.ProductService.mapper.ProductMapper;
 import com.product.ProductService.repository.*;
 import com.product.ProductService.model.Product;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,6 +10,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductServiceImpl implements ProductService{
@@ -14,44 +18,44 @@ public class ProductServiceImpl implements ProductService{
     @Autowired
     private ProductRepository productRepository;
     @Override
-    public Product createProduct(Product product) {
-        LocalDateTime now = LocalDateTime.now();
-        product.setCreatedAt(now);
-        product.setUpdatedAt(now);
-        return productRepository.save(product);
+    public ProductResponseDTO createProduct(ProductRequestDTO productRequestDTO) {
+        Product product = ProductMapper.toEntity(productRequestDTO);
+        product.setCreatedAt(LocalDateTime.now());
+        product.setUpdatedAt(LocalDateTime.now());
+
+        Product saved = productRepository.save(product);
+        return ProductMapper.toResponseDTO(saved);
     }
 
+
     @Override
-    public Product getProductById(UUID id) {
-        return productRepository.findById(id)
+    public ProductResponseDTO getProductById(UUID id) {
+        Product product = productRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+        return ProductMapper.toResponseDTO(product);
+    }
+
+    public List<ProductResponseDTO> getProductsByName(String name) {
+        List<Product> products = productRepository.findByNameContainingIgnoreCase(name);
+        return products.stream()
+                .map(ProductMapper::toResponseDTO)
+                .collect(Collectors.toList());
     }
 
     @Override
-    public List<Product> getProductsByName(String name) {
-        List<Product> result = productRepository.findByNameContainingIgnoreCase(name);
-        return result;
-    }
-
-    @Override
-    public Product updateProductById(Product product) {
-        UUID id = product.getId();
-
+    public ProductResponseDTO updateProductById(ProductRequestDTO productRequestDTO) {
+        UUID id = productRequestDTO.getId();
         if (id == null) {
             throw new IllegalArgumentException("Product ID cannot be null for update");
         }
 
-        Product updatedProduct = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Cannot update, because database can't find a product id: " + id));
+        Product product = productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Cannot update, product not found with id: " + id));
 
-        updatedProduct.setName(product.getName());
-        updatedProduct.setPrice(product.getPrice());
-        updatedProduct.setDescription(product.getDescription());
-        updatedProduct.setQuantity(product.getQuantity());
-        LocalDateTime now = LocalDateTime.now();
-        updatedProduct.setUpdatedAt(now);
+        ProductMapper.updateEntity(product, productRequestDTO);
+        Product updated = productRepository.save(product);
 
-        return updatedProduct;
+        return ProductMapper.toResponseDTO(updated);
     }
 
     @Override
