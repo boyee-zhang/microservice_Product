@@ -24,7 +24,7 @@ public class ProductServiceImplTest {
         product.setPrice(BigDecimal.valueOf(200.0));
         product.setName("test product");
 
-        Product saved = productService.createProduct(product);
+        Product saved = productService.createProduct(ghproduct);
 
         assertNotNull(saved.getId());
         assertEquals("test product", saved.getName());
