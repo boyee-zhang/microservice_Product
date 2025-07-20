@@ -1,11 +1,14 @@
 package com.product.ProductService.service;
 
+import com.product.ProductService.DTO.ProductRequestDTO;
+import com.product.ProductService.DTO.ProductResponseDTO;
 import com.product.ProductService.model.Product;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import java.time.LocalDateTime;
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -20,24 +23,31 @@ public class ProductServiceImplTest {
     @Test
     void testCreateProduct()
     {
-        Product product = new Product();
-        product.setPrice(BigDecimal.valueOf(200.0));
-        product.setName("test product");
+        ProductRequestDTO request = ProductRequestDTO.builder()
+                .name("test product")
+                .price(BigDecimal.valueOf(200.0))
+                .quantity(10)
+                .description("Test description")
+                .build();
 
-        Product saved = productService.createProduct(ghproduct);
+        ProductResponseDTO saved = productService.createProduct(request);
 
         assertNotNull(saved.getId());
         assertEquals("test product", saved.getName());
+        assertEquals(BigDecimal.valueOf(200.0), saved.getPrice());
     }
 
     @Test
     void testGetProductById() {
-        Product product = new Product();
-        product.setName("sample");
-        product.setPrice(BigDecimal.valueOf(99.99));
+        ProductRequestDTO request = ProductRequestDTO.builder()
+                .name("sample")
+                .price(BigDecimal.valueOf(99.99))
+                .quantity(5)
+                .description("Sample product")
+                .build();
 
-        Product saved = productService.createProduct(product);
-        Product found = productService.getProductById(saved.getId());
+        ProductResponseDTO saved = productService.createProduct(request);
+        ProductResponseDTO found = productService.getProductById(saved.getId());
 
         assertNotNull(found);
         assertEquals(saved.getId(), found.getId());
@@ -48,24 +58,24 @@ public class ProductServiceImplTest {
     void testGetProductsByName() {
         String name = "testName_" + UUID.randomUUID();
 
-        Product product1 = new Product();
-        product1.setName(name);
-        product1.setPrice(BigDecimal.valueOf(10));
-        product1.setQuantity(1); // 添加必要字段
-        product1.setCreatedAt(LocalDateTime.now());
-        product1.setUpdatedAt(LocalDateTime.now());
+        ProductRequestDTO product1 = ProductRequestDTO.builder()
+                .name(name)
+                .price(BigDecimal.valueOf(10))
+                .quantity(1)
+                .description("First")
+                .build();
 
-        Product product2 = new Product();
-        product2.setName(name);
-        product2.setPrice(BigDecimal.valueOf(20));
-        product2.setQuantity(1);
-        product2.setCreatedAt(LocalDateTime.now());
-        product2.setUpdatedAt(LocalDateTime.now());
+        ProductRequestDTO product2 = ProductRequestDTO.builder()
+                .name(name)
+                .price(BigDecimal.valueOf(20))
+                .quantity(2)
+                .description("Second")
+                .build();
 
         productService.createProduct(product1);
         productService.createProduct(product2);
 
-        var result = productService.getProductsByName(name);
+        List<ProductResponseDTO> result = productService.getProductsByName(name);
 
         assertNotNull(result);
         assertEquals(2, result.size());
@@ -73,39 +83,49 @@ public class ProductServiceImplTest {
 
     @Test
     void testUpdateProductById() {
-        Product product = new Product();
-        product.setName("Old Name");
-        product.setPrice(BigDecimal.valueOf(50));
-        Product saved = productService.createProduct(product);
+        ProductRequestDTO request = ProductRequestDTO.builder()
+                .name("Old Name")
+                .price(BigDecimal.valueOf(50))
+                .quantity(3)
+                .description("Old desc")
+                .build();
 
-        saved.setName("New Name");
-        saved.setPrice(BigDecimal.valueOf(75));
+        ProductResponseDTO saved = productService.createProduct(request);
 
-        Product updated = productService.updateProductById(saved);
+        ProductRequestDTO updateRequest = ProductRequestDTO.builder()
+                .id(saved.getId())
+                .name("New Name")
+                .price(BigDecimal.valueOf(75))
+                .quantity(5)
+                .description("Updated desc")
+                .build();
+
+        ProductResponseDTO updated = productService.updateProductById(updateRequest);
 
         assertEquals("New Name", updated.getName());
         assertEquals(BigDecimal.valueOf(75), updated.getPrice());
+        assertEquals("Updated desc", updated.getDescription());
     }
 
     @Test
     void testDeleteProductById() {
-        Product product = Product.builder()
+        ProductRequestDTO request = ProductRequestDTO.builder()
                 .name("To Be Deleted")
                 .price(BigDecimal.valueOf(33.3))
                 .quantity(1)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
+                .description("To delete")
                 .build();
 
-        Product saved = productService.createProduct(product);
+        ProductResponseDTO saved = productService.createProduct(request);
+        UUID id = saved.getId();
 
-        productService.deleteProductById(saved.getId());
+        productService.deleteProductById(id);
 
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            productService.getProductById(saved.getId());
+            productService.getProductById(id);
         });
 
-        assertEquals("Product not found with id: " + saved.getId(), exception.getMessage());
+        assertEquals("Product not found with id: " + id, exception.getMessage());
     }
 
 }
